@@ -129,6 +129,55 @@ resamples.null.closer = data.frame(xbars.shifted = resamples$xbars - delta)
 @
   
   \item Compute the bootstrap $p$-value for each test using the shifted resamples. 
+  
+  \textbf{Solution:} We calculated the bootstrap $p$-value with the below code. The output for the closer data is 1e-04, the further data is 1e-04, and the difference data is also 1e-04. This is probably due to an error in the code not working correctly, which I did not have time ot rectify before the submission deadline.
+  <<eval = F, warning = F, message = F>>=
+####Further####
+R <- 10000
+resamples <- tibble(xbars = rep(NA, R))
+
+for(i in 1:R){
+  curr.resample <- sample(finch.dat$`further`,
+                          size = nrow(finch.dat),
+                          replace = T)
+  
+  resamples$xbars[i] <- mean(curr.resample)
+}
+
+
+# Confidence Interval
+quantile(resamples$xbars, c(0.025, 0.975))
+
+library(boot)
+boot.mean <- function(d, i){
+  mean(d[i])
+}
+boots <- boot(data = finch.dat$`further`,
+              statistic = boot.mean,
+              R = R)
+boot.ci(boots, type="bca")
+
+# shift so H0 is true
+mean(resamples$xbars)
+(delta <- mean(resamples$xbars) - 2.9)
+
+
+resamples <- resamples |>
+  mutate(xbars.shifted = xbars - delta)
+
+low <- 2.9 - delta
+high <- 2.9 + delta
+
+resamples |>
+  summarize(mean = mean(xbars.shifted),
+            p.low = mean(xbars.shifted <= low),
+            p.high = mean(xbars.shifted >= high))|>
+  mutate(p = p.low + p.high) |>
+  view()
+
+
+boot.pval(boots, theta_null = mu0) # this does something slightly different
+@
   How do these compare to the $t$-test $p$-values?
     \item What is the 5$^{th}$ percentile of the shifted resamples under the null hypothesis? 
   Note this value approximates $t_{0.05, n-1}$. Compare these values in each case.
@@ -145,11 +194,122 @@ randomization procedure.
 \begin{enumerate}
 \item Now, consider the zebra finch data. We do not know the generating distributions
 for the closer, further, and difference data, so perform the randomization procedure
+
+\textbf{Solution:} We did the following randomization procedure for each of the closer, further, and difference zebra finch data.
+<<eval = F, warning = F, message = F, size= 'scriptsize'>>=
+mu0 = 0
+#Closer
+R <- 10000
+rand <- tibble(xbars = rep(NA, R))
+
+# PREPROCESSING: shift the data to be mean 0 under H0
+x.shift <- finch.dat$`closer` - mu0
+# RANDOMIZE / SHUFFLE
+for(i in 1:R){
+  curr.rand <- x.shift *
+    sample(x = c(-1, 1),
+           size = length(x.shift),
+           replace = T)
+  
+  rand$xbars[i] <- mean(curr.rand)
+}
+# Thinking is hard
+rand <- rand |>
+  mutate(xbars = xbars + mu0) # shifting back
+@
   \item Compute the randomization test $p$-value for each test.
+  
+  \textbf{Solution:} To compute the randomization $p$-value for each text, we used the following code:
+  <<eval = F, warning = F, message = F>>=
+# p-value 
+(delta <- abs(mean(finch.dat$`closer`) - mu0))
+(low <- mu0 - delta) # mirror
+(high<- mu0 + delta)   # xbar
+
+mean(rand$xbars <= low) +
+  mean(rand$xbars >= high)
+@
+  The result is a $p$ value that is effectively 0, which checks out with our other texts (ex, a plain t test) which have a $p$ value on order of $10^-8$.
+  
   \item Compute the randomization confidence interval by iterating over values of $\mu_0$.\\
   \textbf{Hint:} You can ``search" for the lower bound from $Q_1$ and subtracting by 0.0001, 
   and the upper bound using $Q_3$ and increasing by 0.0001. You will continue until you find 
   the first value for which the two-sided $p$-value is greater than or equal to 0.05.
+  
+  \textbf{Solution:} For the closer data, the confidence interval is: 0.1162231 to 0.1962231. For the further data, it is -0.2627244 to -0.1427244. Finally, for the difference data, the confidence interval is 0.2689475 to 0.4489475. These intervals were found using the below code for the randomization test.
+  <<eval = F, warning = F, message = F, size = 'scriptsize'>>=
+#Confidence Interval
+mu0.iterate <- 0.01
+starting.point <- mean(finch.dat$`closer`)
+
+mu.lower <- starting.point
+repeat{
+  rand <- tibble(xbars = rep(NA, R))
+  
+  # PREPROCESSING: shift the data to be mean 0 under H0
+  x.shift <- finch.dat$`closer` - mu.lower
+  # RANDOMIZE / SHUFFLE
+  for(i in 1:R){
+    curr.rand <- x.shift *
+      sample(x = c(-1, 1),
+             size = length(x.shift),
+             replace = T)
+    
+    rand$xbars[i] <- mean(curr.rand)
+  }
+  # Thinking is hard
+  rand <- rand |>
+    mutate(xbars = xbars + mu.lower) # shifting back
+  
+  # p-value 
+  (delta <- abs(mean(finch.dat$`closer`) - mu.lower))
+  (low <- mu.lower - delta) # mirror
+  (high<- mu.lower + delta)   # xbar
+  (p.val <- mean(rand$xbars <= low) +
+      mean(rand$xbars >= high))
+  
+  if(p.val < 0.05){
+    break
+  }else{
+    mu.lower <- mu.lower - mu0.iterate
+  }
+}
+
+mu.upper <- starting.point
+repeat{
+  rand <- tibble(xbars = rep(NA, R))
+  
+  # PREPROCESSING: shift the data to be mean 0 under H0
+  x.shift <- finch.dat$`closer` - mu.upper
+  # RANDOMIZE / SHUFFLE
+  for(i in 1:R){
+    curr.rand <- x.shift *
+      sample(x = c(-1, 1),
+             size = length(x.shift),
+             replace = T)
+    
+    rand$xbars[i] <- mean(curr.rand)
+  }
+  # Thinking is hard
+  rand <- rand |>
+    mutate(xbars = xbars + mu.upper) # shifting back
+  
+  # p-value 
+  (delta <- abs(mean(finch.dat$`closer`) - mu.upper))
+  (low <- mu.upper - delta) # mirror
+  (high<- mu.upper + delta)   # xbar
+  (p.val <- mean(rand$xbars <= low) +
+      mean(rand$xbars >= high))
+  
+  if(p.val < 0.05){
+    break
+  }else{
+    mu.upper <- mu.upper + mu0.iterate
+  }
+}
+
+c(mu.lower, mu.upper)
+@
 \end{enumerate}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
