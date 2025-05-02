@@ -85,10 +85,50 @@ for the the further observations.
   where $f_Z(\cdot)$ and $F_Z(\cdot)$ are the Gaussian PDF and CDF and skew is the
   skewness of the data. What is the potential error in the computation of the 
   $p$-value when testing $H_0: \mu_X=0; H_a: \mu_X<0$ using the zebra finch further data? 
+  
+  \textbf{Solution:} The potential error in the computation of the $p$-value is $-1.226006e-13$
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hldef{finch.dat} \hlkwb{=} \hlkwd{read.csv}\hldef{(}\hlsng{'./zebrafinches.csv'}\hldef{)}
+
+\hlcom{#potential error in p-value}
+\hldef{n} \hlkwb{=} \hlkwd{length}\hldef{(finch.dat}\hlopt{$}\hldef{further)}
+\hldef{t.further} \hlkwb{=} \hlkwd{t.test}\hldef{(finch.dat}\hlopt{$}\hldef{further,} \hlkwc{alternative} \hldef{=} \hlsng{'less'}\hldef{,}
+                 \hlkwc{mu} \hldef{=} \hlnum{0}\hldef{)}\hlopt{$}\hldef{statistic[}\hlnum{1}\hldef{]}
+\hldef{gauss.pdf}  \hlkwb{=} \hlkwd{dnorm}\hldef{(t.further)}
+\hldef{finch.skew} \hlkwb{=} \hlkwd{skewness}\hldef{(finch.dat}\hlopt{$}\hldef{further)}
+
+\hldef{error} \hlkwb{=} \hldef{gauss.pdf}\hlopt{*}\hldef{finch.skew}\hlopt{*}\hldef{(}\hlnum{2}\hlopt{*}\hldef{t.further}\hlopt{^}\hlnum{2} \hlopt{+} \hlnum{1}\hldef{)}\hlopt{/}\hldef{(}\hlkwd{sqrt}\hldef{(n)}\hlopt{*}\hlnum{6}\hldef{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
 
   \item Compute the error for $t$ statistics from -10 to 10 and plot a line
   that shows the error across $t$. Continue to use the skewness and 
   the sample size for the zebra finch further data.
+  
+  \textbf{Solution:}
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{#t-statistic error from -10 to 10}
+\hldef{t.errors} \hlkwb{=} \hlkwd{c}\hldef{()}
+\hlkwa{for} \hldef{(i} \hlkwa{in} \hlkwd{seq}\hldef{(}\hlopt{-}\hlnum{10}\hldef{,} \hlnum{10}\hldef{,} \hlkwc{by} \hldef{=} \hlnum{0.01}\hldef{))\{}
+\hldef{t} \hlkwb{=} \hldef{i}
+\hldef{gauss.pdf}  \hlkwb{=} \hlkwd{dnorm}\hldef{(t)}
+\hldef{error} \hlkwb{=} \hldef{gauss.pdf}\hlopt{*}\hldef{finch.skew}\hlopt{*}\hldef{(}\hlnum{2}\hlopt{*}\hldef{t}\hlopt{^}\hlnum{2} \hlopt{+} \hlnum{1}\hldef{)}\hlopt{/}\hldef{(}\hlkwd{sqrt}\hldef{(n)}\hlopt{*}\hlnum{6}\hldef{)}
+\hldef{t.errors} \hlkwb{=} \hlkwd{append}\hldef{(t.errors, error)}
+\hldef{\}}
+\hlkwd{par}\hldef{(}\hlkwc{mar} \hldef{=} \hlkwd{c}\hldef{(}\hlnum{4}\hldef{,} \hlnum{4}\hldef{,} \hlnum{2}\hldef{,} \hlnum{1}\hldef{))}
+\hlkwd{plot}\hldef{(}\hlkwd{seq}\hldef{(}\hlopt{-}\hlnum{10}\hldef{,} \hlnum{10}\hldef{,} \hlkwc{by} \hldef{=} \hlnum{0.01}\hldef{), t.errors,}
+   \hlkwc{xlab} \hldef{=} \hlsng{'t statistic'}\hldef{,}
+   \hlkwc{ylab} \hldef{=} \hlsng{'error in t'}\hldef{,}
+   \hlkwc{main} \hldef{=} \hlsng{'A changing error in t statistic'}\hldef{)}
+\end{alltt}
+\end{kframe}
+\includegraphics[width=\maxwidth]{figure/unnamed-chunk-3-1} 
+\end{knitrout}
 
   \item Suppose we wanted to have a tail probability within 10\% of the desired
   $\alpha=0.05$. Recall we did a left-tailed test using the further data.
@@ -97,6 +137,23 @@ for the the further observations.
   \[0.10 \alpha  \stackrel{set}{=} \underbrace{\frac{\text{skew}}{\sqrt{n}} \frac{(2t^2+1)}{6} f_Z(t)}_{\textrm{error}},\]
   which yields
   \[ n = \left(\frac{\text{skew}}{6(0.10\alpha)} (2t^2 + 1) f_Z(t)\right)^2.\]
+  
+  \textbf{Solution:} Calculating $n$ with the given formula, we get a value very close to zero (on the order of $10^-20$. That means that our data is so far from the null hypothesis of 0, that any datapoint over here will be beyond that 0.05 threshold.
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{#Sample size needed}
+\hldef{a}\hlkwb{=} \hlnum{0.05}
+\hldef{gauss.pdf}  \hlkwb{=} \hlkwd{dnorm}\hldef{(t.further)}
+\hldef{n} \hlkwb{=} \hldef{((finch.skew}\hlopt{/}\hldef{(}\hlnum{6}\hlopt{*}\hlnum{0.10}\hlopt{*}\hldef{a))}\hlopt{*}\hldef{(}\hlnum{2}\hlopt{*}\hldef{t.further}\hlopt{^}\hlnum{2} \hlopt{+} \hlnum{1}\hldef{)}\hlopt{*}\hldef{gauss.pdf)}\hlopt{^}\hlnum{2}
+\hldef{n}
+\end{alltt}
+\begin{verbatim}
+##            t 
+## 1.503091e-20
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
 \end{enumerate}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -116,6 +173,28 @@ sampling distribution of the $T$ statistic:
   resamples shifted to ensure they are consistent with the null hypotheses at the average 
   (i.e., here ensure the shifted resamples are 0 on average, corresponding
   to $t=0$, for each case). 
+  
+  \textbf{Solution:} In the below code, the mean of the shifted \texttt{resamples.null.closer} is approximately 0
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hldef{R} \hlkwb{<-} \hlnum{10000}
+\hldef{resamples} \hlkwb{<-} \hlkwd{tibble}\hldef{(}\hlkwc{xbars} \hldef{=} \hlkwd{rep}\hldef{(}\hlnum{NA}\hldef{, R))}
+
+\hlkwa{for}\hldef{(i} \hlkwa{in} \hlnum{1}\hlopt{:}\hldef{R)\{}
+\hldef{curr.resample} \hlkwb{<-} \hlkwd{sample}\hldef{(finch.dat}\hlopt{$}\hldef{`closer`,}
+                        \hlkwc{size} \hldef{=} \hlkwd{nrow}\hldef{(finch.dat),}
+                        \hlkwc{replace} \hldef{= T)}
+
+\hldef{resamples}\hlopt{$}\hldef{xbars[i]} \hlkwb{<-} \hlkwd{mean}\hldef{(curr.resample)}
+\hldef{\}}
+\hlcom{#Shifted Resamples}
+\hldef{delta} \hlkwb{=} \hlkwd{mean}\hldef{(resamples}\hlopt{$}\hldef{xbars)}
+\hldef{resamples.null.closer} \hlkwb{=} \hlkwd{data.frame}\hldef{(}\hlkwc{xbars.shifted} \hldef{= resamples}\hlopt{$}\hldef{xbars} \hlopt{-} \hldef{delta)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+  
   \item Compute the bootstrap $p$-value for each test using the shifted resamples. 
   How do these compare to the $t$-test $p$-values?
     \item What is the 5$^{th}$ percentile of the shifted resamples under the null hypothesis? 
