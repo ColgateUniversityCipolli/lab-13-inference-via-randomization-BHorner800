@@ -247,8 +247,43 @@ sampling distribution of the $T$ statistic:
   How do these compare to the $t$-test $p$-values?
     \item What is the 5$^{th}$ percentile of the shifted resamples under the null hypothesis? 
   Note this value approximates $t_{0.05, n-1}$. Compare these values in each case.
+  
+  \textbf{Solution:} The outer $5^{th}$ percentile of the shifted resamples are for the closer: 0.1218 and 0.1948, for further it is -0.2640 and -0.1606. Finally, for the difference, it is 0.2870 and 0.4509. We used the following code to find these values.
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hldef{R} \hlkwb{<-} \hlnum{10000}
+\hldef{resamples} \hlkwb{<-} \hlkwd{tibble}\hldef{(}\hlkwc{xbars} \hldef{=} \hlkwd{rep}\hldef{(}\hlnum{NA}\hldef{, R))}
+
+\hlkwa{for}\hldef{(i} \hlkwa{in} \hlnum{1}\hlopt{:}\hldef{R)\{}
+\hldef{curr.resample} \hlkwb{<-} \hlkwd{sample}\hldef{(finch.dat}\hlopt{$}\hldef{`diff`,}
+                        \hlkwc{size} \hldef{=} \hlkwd{nrow}\hldef{(finch.dat),}
+                        \hlkwc{replace} \hldef{= T)}
+
+\hldef{resamples}\hlopt{$}\hldef{xbars[i]} \hlkwb{<-} \hlkwd{mean}\hldef{(curr.resample)}
+\hldef{\}}
+
+\hlcom{# Confidence Interval}
+\hlkwd{quantile}\hldef{(resamples}\hlopt{$}\hldef{xbars,} \hlkwd{c}\hldef{(}\hlnum{0.025}\hldef{,} \hlnum{0.975}\hldef{))}
+
+\hlkwd{library}\hldef{(boot)}
+\hldef{boot.mean} \hlkwb{<-} \hlkwa{function}\hldef{(}\hlkwc{d}\hldef{,} \hlkwc{i}\hldef{)\{}
+\hlkwd{mean}\hldef{(d[i])}
+\hldef{\}}
+\hldef{boots} \hlkwb{<-} \hlkwd{boot}\hldef{(}\hlkwc{data} \hldef{= finch.dat}\hlopt{$}\hldef{`diff`,}
+            \hlkwc{statistic} \hldef{= boot.mean,}
+            \hlkwc{R} \hldef{= R)}
+\hlkwd{boot.ci}\hldef{(boots,} \hlkwc{type}\hldef{=}\hlsng{"bca"}\hldef{)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+  
+  
+  
   \item Compute the bootstrap confidence intervals using the resamples. How do these 
   compare to the $t$-test confidence intervals?
+  
+  \textbf{Solution:} The confidence interval is the same as these values for the outer $2.5\%$ of the data.
 \end{enumerate}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -58,7 +58,7 @@ R <- 10000
 resamples <- tibble(xbars = rep(NA, R))
 
 for(i in 1:R){
-  curr.resample <- sample(finch.dat$`closer`,
+  curr.resample <- sample(finch.dat$`diff`,
                           size = nrow(finch.dat),
                           replace = T)
   
@@ -72,7 +72,7 @@ library(boot)
 boot.mean <- function(d, i){
   mean(d[i])
 }
-boots <- boot(data = finch.dat$`closer`,
+boots <- boot(data = finch.dat$`diff`,
               statistic = boot.mean,
               R = R)
 boot.ci(boots, type="bca")

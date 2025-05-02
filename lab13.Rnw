@@ -181,8 +181,39 @@ boot.pval(boots, theta_null = mu0) # this does something slightly different
   How do these compare to the $t$-test $p$-values?
     \item What is the 5$^{th}$ percentile of the shifted resamples under the null hypothesis? 
   Note this value approximates $t_{0.05, n-1}$. Compare these values in each case.
+  
+  \textbf{Solution:} The outer $5^{th}$ percentile of the shifted resamples are for the closer: 0.1218 and 0.1948, for further it is -0.2640 and -0.1606. Finally, for the difference, it is 0.2870 and 0.4509. We used the following code to find these values.
+  <<eval = F, warning = F, message = F, size = 'scriptsize'>>= 
+R <- 10000
+resamples <- tibble(xbars = rep(NA, R))
+
+for(i in 1:R){
+  curr.resample <- sample(finch.dat$`diff`,
+                          size = nrow(finch.dat),
+                          replace = T)
+  
+  resamples$xbars[i] <- mean(curr.resample)
+}
+
+# Confidence Interval
+quantile(resamples$xbars, c(0.025, 0.975))
+
+library(boot)
+boot.mean <- function(d, i){
+  mean(d[i])
+}
+boots <- boot(data = finch.dat$`diff`,
+              statistic = boot.mean,
+              R = R)
+boot.ci(boots, type="bca")
+@
+  
+  
+  
   \item Compute the bootstrap confidence intervals using the resamples. How do these 
   compare to the $t$-test confidence intervals?
+  
+  \textbf{Solution:} The confidence interval is the same as these values for the outer $2.5\%$ of the data.
 \end{enumerate}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
